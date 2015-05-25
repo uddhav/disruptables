@@ -10,7 +10,7 @@ import java.util.function.Function;
  *
  * @since May 2015
  */
-final class Failure<T> extends Try<T>
+final class Failure<T> implements Try<T>
 {
     private final Exception m_exception;
 

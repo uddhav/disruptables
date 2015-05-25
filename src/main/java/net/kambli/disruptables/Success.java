@@ -11,8 +11,10 @@ import java.util.function.Function;
  *
  * @since May 2015
  */
-final class Success<T> extends Try<T>
+final class Success<T> implements Try<T>
 {
+    static final Try<?> EMPTY = new Success<>(null);
+
     private final T m_result;
 
     Success(final T result)

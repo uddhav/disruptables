@@ -12,10 +12,8 @@ import java.util.function.Function;
  *
  * @since May 2015
  */
-public abstract class Try<T>
+public interface Try<T>
 {
-    private static final Try<?> VOID = new Success<>(null);
-
     /**
      * {{{
      *      Try<Double> quotient = Try.get(() -> {
@@ -32,7 +30,7 @@ public abstract class Try<T>
      * @param <T> the type of result
      * @return a {@code Try<T>} with result or an exception
      */
-    public static <T> Try<T> get(final DisruptableSupplier<T> supplier)
+    static <T> Try<T> get(DisruptableSupplier<T> supplier)
     {
         try
         {
@@ -57,12 +55,12 @@ public abstract class Try<T>
      * @return a {@code Try<T>} with result or an exception
      */
     @SuppressWarnings("unchecked")
-    public static <T> Try<T> run(final DisruptableRunnable runnable)
+    static <T> Try<T> run(DisruptableRunnable runnable)
     {
         try
         {
             runnable.run();
-            return (Try<T>)VOID;
+            return (Try<T>)Success.EMPTY;
         }
         catch (Exception exception)
         {
@@ -70,31 +68,29 @@ public abstract class Try<T>
         }
     }
 
-    /* package-private */ Try() {}
-
     /**
      * @return the result from this `Success` or throws the exception if this is a `Failure`.
      * @throws Exception
      */
-    public abstract T get() throws Exception;
+    T get() throws Exception;
 
     /**
      * @param other the result to be returned if `Try` is a `Failure`
      * @return the result, if `Try` is a `Success`, otherwise {@code other}
      */
-    public abstract T orElse(T other);
+    T orElse(T other);
 
     /**
      * @param disruptable the block to be tried if `Try` is a `Failure`
      * @return the result, if `Try` is a `Success`, otherwise try {@code other}
      */
-    public abstract Try<T> orElseGet(DisruptableSupplier<T> disruptable);
+    Try<T> orElseGet(DisruptableSupplier<T> disruptable);
 
     /**
      * @param disruptable the block to be tried if `Try` is a `Failure`
      * @return the result, if `Try` is a `Success`, otherwise try {@code other}
      */
-    public abstract Try<T> orElseRun(DisruptableRunnable disruptable);
+    Try<T> orElseRun(DisruptableRunnable disruptable);
 
     /**
      * Return the calculated result, if present, otherwise throw an exception to be created by the provided supplier.
@@ -107,47 +103,47 @@ public abstract class Try<T>
      * @return the present value
      * @throws X if there is no value present
      */
-    public abstract <X extends Throwable> T orElseThrow(Function<? super Exception, ? extends X> mapper) throws X;
+    <X extends Throwable> T orElseThrow(Function<? super Exception, ? extends X> mapper) throws X;
 
     /**
      * @return `true` if the `Try` is a `Success`, `false` otherwise.
      */
-    public abstract boolean isSuccess();
+    boolean isSuccess();
 
     /**
      * @return `true` if the `Try` is a `Failure`, `false` otherwise
      */
-    public abstract boolean isFailure();
+    boolean isFailure();
 
     /**
      * @param successHandler is applied if this is a `Success`, otherwise does nothing if this is a `Failure`
      */
-    public abstract void ifSuccess(Consumer<? super T> successHandler);
+    void ifSuccess(Consumer<? super T> successHandler);
 
     /**
      * @param failureHandler is applied if this is a `Failure`, otherwise does nothing if this is a `Success`
      */
-    public abstract void ifFailed(Consumer<Exception> failureHandler);
+    void ifFailed(Consumer<Exception> failureHandler);
 
     /**
      * @param predicate a predicate to apply to the result, if successful
      * @return a `Failure` if the predicate is not satisfied
      */
-    public abstract Try<T> filter(DisruptablePredicate<? super T> predicate);
+    Try<T> filter(DisruptablePredicate<? super T> predicate);
 
     /**
      * @param <U> The type of the result of the mapping function
      * @param mapper a mapping function to apply to the result, if successful
      * @return the {@code Try<U>} from mapping the given function to the result from this `Success` or returns this if this is a `Failure`.
      */
-    public abstract <U> Try<U> map(DisruptableFunction<? super T, ? extends U> mapper);
+    <U> Try<U> map(DisruptableFunction<? super T, ? extends U> mapper);
 
     /**
      * @param <U> The type of the result of the mapping function
      * @param mapper a mapping function to apply to the result, if successful
      * @return the {@code Try<U>} from mapping the given function to the result from this `Success` or returns this if this is a `Failure`.
      */
-    public abstract <U> Try<U> flatMap(DisruptableFunction<? super T, Try<U>> mapper);
+    <U> Try<U> flatMap(DisruptableFunction<? super T, Try<U>> mapper);
 
     /**
      * Throw an exception to be specified by the caller on match otherwise returns itself
@@ -157,7 +153,7 @@ public abstract class Try<T>
      * @return the {@code Try<T>} if it is a `Success` or a `Failure` with a different exception
      * @throws X if there is no value present
      */
-    public abstract <X extends Throwable> Try<T> capitulate(Class<X> exceptionClass) throws X;
+    <X extends Throwable> Try<T> capitulate(Class<X> exceptionClass) throws X;
 
     /**
      * Applies the given function `f` if this is a `Failure`, otherwise returns this if this is a `Success`.
@@ -165,7 +161,7 @@ public abstract class Try<T>
      * @param mapper a mapping function to apply to the exception, if failed
      * @return a result to be mapped in case of a failure
      */
-    public abstract Try<T> recover(DisruptableFunction<? super Exception, ? extends T> mapper);
+    Try<T> recover(DisruptableFunction<? super Exception, ? extends T> mapper);
 
     /**
      * Applies the given function `f` if this is a `Failure`, otherwise returns this if this is a `Success`.
@@ -173,12 +169,12 @@ public abstract class Try<T>
      * @param mapper a mapping function to apply to the exception, if failed
      * @return a result to be mapped in case of a failure
      */
-    public abstract Try<T> recoverWith(DisruptableFunction<? super Exception, Try<T>> mapper);
+    Try<T> recoverWith(DisruptableFunction<? super Exception, Try<T>> mapper);
 
     /**
      * @return `empty` if this is a `Failure` or a `optional` containing the result if this is a `Success`
      */
-    public abstract Optional<T> toOptional();
+    Optional<T> toOptional();
 
     /**
      * Indicates whether some other object is "equal to" this Try.
@@ -194,7 +190,7 @@ public abstract class Try<T>
      * otherwise {@code false}
      */
     @Override
-    public abstract boolean equals(Object obj);
+    boolean equals(Object obj);
 
     /**
      * Returns the hash code value of the present result, if any, or as applicable if no result is present.
@@ -202,7 +198,7 @@ public abstract class Try<T>
      * @return hash code value of the present result or as applicable if no result is present
      */
     @Override
-    public abstract int hashCode();
+    int hashCode();
 
     /**
      * Returns a non-empty string representation of this Try suitable for
@@ -216,5 +212,5 @@ public abstract class Try<T>
      * @return the string representation of this instance
      */
     @Override
-    public abstract String toString();
+    String toString();
 }

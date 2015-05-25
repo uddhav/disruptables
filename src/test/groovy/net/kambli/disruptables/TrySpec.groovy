@@ -83,6 +83,18 @@ class TrySpec extends Specification
         thrown(NoSuchElementException)
     }
 
+    def "Throw a transformed exception from a disrupted block of code"()
+    {
+        given:
+        def test = Try.run { -> Collections.emptyList() get 0 }
+
+        when:
+        test.orElseThrow { e -> new IllegalStateException(e) }
+
+        then:
+        thrown(IllegalStateException)
+    }
+
     def "Execute an action on success"()
     {
         given:
