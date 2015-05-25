@@ -12,7 +12,7 @@ public interface DisruptableSupplier<T>
      * Gets a result.
      *
      * @return a result of type {@code T}
-     * @throws an {@code Exception} that disrupts the supplier
+     * @throws Exception that disrupts the supplier
      */
     T get() throws Exception;
 }
